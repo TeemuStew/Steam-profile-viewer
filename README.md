@@ -1,8 +1,13 @@
-**Steam Profile Viewer**
+# Steam Profile Viewer
 
 A web application that allows users to view Steam profile information, Steam levels, top played games, and dynamically sets the profile's background image as the app's background.
 
-**Setting up**
+<img src="https://github.com/user-attachments/assets/b75f7812-78d9-46a3-8d3b-456524c7b6dd" width="700" />
+<img src="https://github.com/user-attachments/assets/c1b8bd02-f346-48e0-b0d8-a650c7f2e29b" alt="kuva2" width="700" />
+<img src="https://github.com/user-attachments/assets/10258269-95b2-455c-affb-63fd09bb3973" alt="kuva3" width="700" />
+
+
+## Setting up
 Steam API key:
 1. Log in to your Steam account
 2. Navigate to https://steamcommunity.com/dev/apikey
@@ -17,5 +22,6 @@ Installation:
 ```npm install```
 3. Create .env file and add API key
 
-Running the app:
+## Running the app
 ```node server.js```
+
