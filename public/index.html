@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Steam Profile Viewer</title>
+
+  <!-- favicon to avoid 404 for missing icon -->
+  <link rel="icon" href="data:image/x-icon;base64,..."/>
+
+  <!-- Font and stylesheet -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/styles.css"/>
+</head>
+<body>
+
+  <!-- Container for background (image or video/gif) -->
+  <div id="bgContainer"></div>
+
+  <!-- Main content container -->
+  <div class="container">
+    <h1>Steam Profile Viewer</h1>
+
+    <!-- Input field for profile URL -->
+    <div class="form-group">
+      <input type="text" id="profileUrl" placeholder="Enter Steam profile URL"/>
+    </div>
+
+    <!-- Button to fetch info -->
+    <button id="go">Get profile info</button>
+
+    <!-- Section where profile info will be -->
+    <div id="result"></div>
+  </div>
+
+  <!-- Modal box to show detailed game stats -->
+  <div id="statsModal" class="modal">
+    <div class="modal-content">
+      <button class="close-btn" id="closeModal">&times;</button>
+      <h3>All stats</h3>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <script>
+    const btn       = document.getElementById('go');
+    const result    = document.getElementById('result');
+    const bgCont    = document.getElementById('bgContainer');
+    const modal     = document.getElementById('statsModal');
+    const modalBody = document.getElementById('modalBody');
+    const closeBtn  = document.getElementById('closeModal');
+
+    // Converts Steam status code from numbers to string
+    function getStatus(s) {
+      return ["Offline","Online","Busy","Away","Snooze","Looking to trade","Looking to play"][s] || "Unknown";
+    }
+
+    // Converts UNIX timestamp to readable date
+    function formatDate(ts) {
+      return ts ? new Date(ts*1000).toDateString() : "Unknown";
+    }
+
+    // Converts visibility code to readable text
+    function getVisibility(c) {
+      return c === 3 ? "Public" : "Private/Restricted";
+    }
+
+    // Main function to fetch and display Steam profile data
+    async function getProfile() {
+      result.textContent = "Loading…";
+      bgCont.innerHTML = '';           // Clear previous background
+      document.body.style.backgroundImage = ''; // Remove any inline background
+
+      try {
+        const url = document.getElementById('profileUrl').value.trim();
+        if (!url) { alert("Enter a Steam URL!"); return; }
+
+        // Make POST request to server with profile URL
+        const res = await fetch('/get-profile', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ profileUrl: url })
+        });
+
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+        // JSON response
+        const {
+          player, backgroundUrl, isVideo,
+          friendCount, topGames, steamLevel
+        } = await res.json();
+
+        // Render profile data
+        result.innerHTML = `
+          <div class="profile-header">
+            <img src="${player.avatarfull}" alt="Avatar"/>
+            <div>
+              <h3>${document.createTextNode(player.personaname).textContent}</h3>
+              <p>Status: ${getStatus(player.personastate)}</p>
+              <p>SteamID: ${player.steamid}</p>
+              <p>Profile URL: <a href="${player.profileurl}" target="_blank">${player.profileurl}</a></p>
+              <p>Country: ${player.loccountrycode || 'Unknown'}</p>
+              <p>Created: ${formatDate(player.timecreated)}</p>
+              <p>Visibility: ${getVisibility(player.communityvisibilitystate)}</p>
+              <p>Steam Level: ${steamLevel}</p>
+              <p>Friends: ${friendCount}</p>
+            </div>
+          </div>
+          <h4>Top Played Games</h4>
+          ${topGames.map(g => `
+            <div class="game">
+              <img src="https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/${g.appid}/${g.img_icon_url}.jpg" alt="${g.name}"/>
+              <div>
+                <h4>${g.name}</h4>
+                <p>Playtime: ${g.playtime_hours} hrs</p>
+                <p>Achievements: ${g.achieved} / ${g.totalAchievements}</p>
+                <p class="stats-exposed" data-stats='${JSON.stringify(g.stats)}'>
+                  Stats Exposed: ${g.stats.length}
+                </p>
+              </div>
+            </div>
+          `).join('')}
+        `;
+
+        // Match background from profile
+        if (isVideo && backgroundUrl) {
+          bgCont.innerHTML = `
+            <video autoplay muted loop id="bgVideo">
+              <source src="${backgroundUrl}" type="video/mp4"/>
+            </video>`;
+        } else if (backgroundUrl) {
+          document.body.style.backgroundImage = `url(${backgroundUrl})`;
+          document.body.style.backgroundSize = 'cover';
+          document.body.style.backgroundPosition = 'center';
+        }
+
+        // Event listeners for stat modals
+        document.querySelectorAll('.stats-exposed').forEach(elem => {
+          elem.style.cursor = 'pointer';
+          elem.onclick = () => {
+            const stats = JSON.parse(elem.dataset.stats);
+            modalBody.innerHTML = stats.map(s =>
+              `<div class="stat-item"><strong>${s.name}</strong>: ${s.value}</div>`
+            ).join('');
+            modal.classList.add('open');
+          };
+        });
+
+      } catch (e) {
+        result.innerHTML = `<p style="color:red;">${e.message}</p>`;
+      }
+    }
+
+    btn.addEventListener('click', getProfile);
+
+    // Modal close button
+    closeBtn.addEventListener('click', () => modal.classList.remove('open'));
+    modal.addEventListener('click', e => {
+      if (e.target === modal) modal.classList.remove('open');
+    });
+  </script>
+</body>
+</html>
