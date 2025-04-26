@@ -16,7 +16,7 @@ Steam API key:
 
 Installation:
 1. Clone the repo:
-```git clone https://github.com/yourusername/steam-profile-viewer.git```
+```git clone https://github.com/teemustew/steam-profile-viewer.git```
 ```cd steam-profile-viewer```
 2. Install dependencies
 ```npm install```
