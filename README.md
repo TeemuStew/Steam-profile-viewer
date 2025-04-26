@@ -15,13 +15,15 @@ Steam API key:
 4. Click "Register" to obtain your API key
 
 Installation:
-1. Clone the repo:
-```git clone https://github.com/teemustew/steam-profile-viewer.git```
-```cd steam-profile-viewer```
-2. Install dependencies
+1. Clone the repo
+
+3. Install dependencies
 ```npm install```
-3. Create .env file and add API key
+4. Create .env file and add API key
 
 ## Running the app
 ```node server.js```
 
+## Potential updates
+- Making sure custom id's work
+- Show a list of achievements the same way as stats 
